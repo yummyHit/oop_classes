@@ -38,6 +38,10 @@ typedef int (*__equal_string)(const String*, const String*);
 typedef int (*__equal_const)(const String*, const char*);
 typedef void (*__format_string)(String*, const char*, ...);
 typedef void (*__format_const)(String*, const char*, ...);
+typedef int (*__index_of)(const String*, unsigned);
+typedef int (*__find_character)(const String*, const char);
+typedef int (*__find_string)(const String*, const String*);
+typedef int (*__find_const)(const String*, const char*);
 
 struct __string {
 	char *str;
@@ -61,6 +65,10 @@ struct __string {
 	__equal_const isEqualRow;
 	__format_string format;
 	__format_const formatRow;
+	__index_of indexOf;
+	__find_character findAt;
+	__find_string findStr;
+	__find_const find;
 };
 
 void setString(String *this, const char *str) {
@@ -202,6 +210,37 @@ void formatConst(String *this, const char *format, ...) {
 	va_end(args);
 }
 
+int indexOfString(const String *this, unsigned index) {
+	if(index < 0 || index >= this->len)
+		return EOF;
+	else
+		return this->str[index];
+}
+
+int findCharacter(const String *this, const char ch) {
+	unsigned i = 0;
+	for(i = 0; i < this->len; i++)
+		if(this->str[i] == ch)
+			return i;
+	return EOF;
+}
+
+int findString(const String *this, const String *other) {
+	const char *tmp = strstr(this->str, other->str);
+	int index = EOF;
+	if(tmp != NULL)
+		index = tmp - this->str;
+	return index;
+}
+
+int findConst(const String *this, const char *str) {
+	const char *tmp = strstr(this->str, str);
+	int index = EOF;
+	if(tmp != NULL)
+		index = tmp - this->str;
+	return index;
+}
+
 String new_String() {
 	String str = nullString;
 	initString(&str);
@@ -251,6 +290,10 @@ void initString(String *this) {
 	this->isEqualRow = equalConst;
 	this->format = formatString;
 	this->formatRow = formatConst;
+	this->indexOf = indexOfString;
+	this->findAt = findCharacter;
+	this->findStr = findString;
+	this->find = findConst;
 }
 
 void destroyString(String *this) {
@@ -367,8 +410,25 @@ int main() {
 	printf("[str4: %p]Ptring: %s, Length: %d\n", &str4, str4->get(str4), str4->length(str4));
 
 	printf("\n##### formatRow() Test...\n");
+
 	str4->formatRow(str4, "%s %d %s", "append", 111, "good");
 	printf("[str4: %p]Ptring: %s, Length: %d\n", &str4, str4->get(str4), str4->length(str4));
+
+	printf("\n##### indexOf() Test...\n");
+
+	printf("str1.indexOf(1) is %c\n", str1.indexOf(&str1, 2));
+	printf("str4->indexOf(8) is %c\n", str4->indexOf(str4, 8));
+
+	printf("\n##### findAt() Test...\n");
+
+	printf("str4->findAt('8') is %d index\n", str4->findAt(str4, '8'));
+	printf("str4->findAt('e') is %d index\n", str4->findAt(str4, 'e'));
+
+	printf("\n##### find() Test...\n");
+
+	printf("str4->find(\"111\") is %d index\n", str4->find(str4, "111"));
+	printf("str4->find(\"hello\") is %d index\n", str4->find(str4, "hello"));
+	printf("str4->find(\"wow\") is %d index\n", str4->find(str4, "wow"));
 
 	return 0;
 }
